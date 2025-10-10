@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Login - Cine</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            max-width: 400px;
+            width: 100%;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+            text-align: center;
+            font-size: 28px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: bold;
+        }
+        input[type="text"],
+        input[type="password"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        input[type="text"]:focus,
+        input[type="password"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background: #5568d3;
+        }
+        .link-container {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .link-container a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .link-container a:hover {
+            text-decoration: underline;
+        }
+        .error-message {
+            background: #fee;
+            color: #c33;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎬 Iniciar Sesión</h1>
+        <div id="errorMessage" class="error-message"></div>
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="nombre">Usuario</label>
+                <input type="text" id="nombre" required>
+            </div>
+            <div class="form-group">
+                <label for="clave">Contraseña</label>
+                <input type="password" id="clave" required>
+            </div>
+            <button type="submit">Entrar</button>
+        </form>
+        <div class="link-container">
+            <p>¿No tienes cuenta? <a href="/registro">Regístrate aquí</a></p>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById("loginForm").onsubmit = async (e) => {
+            e.preventDefault();
+            const nombre = document.getElementById("nombre").value;
+            const clave = document.getElementById("clave").value;
+            const errorDiv = document.getElementById("errorMessage");
+            
+            if (!nombre || !clave) {
+                errorDiv.textContent = "Por favor completa todos los campos";
+                errorDiv.style.display = "block";
+                return;
+            }
+            
+            try {
+                const res = await fetch("/api/login", {
+                    method: "POST",
+                    headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify({nombre, clave})
+                });
+                const data = await res.json();
+                
+                if (data.mensaje) {
+                    localStorage.setItem("usuario", nombre);
+                    window.location.href = "/peliculas";
+                } else {
+                    errorDiv.textContent = data.error || "Error al iniciar sesión";
+                    errorDiv.style.display = "block";
+                }
+            } catch (error) {
+                errorDiv.textContent = "Error al conectar con el servidor";
+                errorDiv.style.display = "block";
+            }
+        };
+    </script>
+</body>
+</html>

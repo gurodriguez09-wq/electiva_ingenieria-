@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Películas</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 900px;
+      margin: 20px auto;
+      padding: 0 20px;
+    }
+    .pelicula-item {
+      cursor: pointer;
+      padding: 10px;
+      margin: 5px 0;
+      background: #f0f0f0;
+      border-radius: 5px;
+      transition: background 0.3s;
+    }
+    .pelicula-item:hover {
+      background: #e0e0e0;
+    }
+    .pelicula-titulo {
+      font-weight: bold;
+      color: #333;
+    }
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.7);
+      z-index: 1000;
+    }
+    .modal-content {
+      background: white;
+      margin: 30px auto;
+      padding: 30px;
+      max-width: 800px;
+      max-height: 85vh;
+      overflow-y: auto;
+      border-radius: 10px;
+      position: relative;
+    }
+    .close {
+      position: absolute;
+      top: 10px;
+      right: 20px;
+      font-size: 30px;
+      cursor: pointer;
+      color: #999;
+    }
+    .close:hover {
+      color: #333;
+    }
+    .detalle-label {
+      font-weight: bold;
+      color: #555;
+      margin-top: 15px;
+    }
+    button {
+      padding: 8px 15px;
+      cursor: pointer;
+      border: none;
+      border-radius: 5px;
+      background: #007bff;
+      color: white;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+    .resena-item {
+      background: #f9f9f9;
+      padding: 15px;
+      margin: 10px 0;
+      border-radius: 5px;
+      border-left: 4px solid #007bff;
+    }
+    .resena-usuario {
+      font-weight: bold;
+      color: #007bff;
+    }
+    .resena-calificacion {
+      color: #ffa500;
+      margin-left: 10px;
+    }
+    .resena-texto {
+      margin-top: 8px;
+      color: #333;
+    }
+    .resena-fecha {
+      font-size: 0.85em;
+      color: #999;
+      margin-top: 5px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Bienvenido, <span id="usuario"></span></h1>
+  <button id="logout">Cerrar sesión</button>
+  <button onclick="mostrarFormularioAgregar()" style="margin-left: 10px; background: #28a745;">➕ Agregar Película</button>
+
+  <h2>Películas disponibles</h2>
+  
+  <div style="margin: 20px 0;">
+    <input type="text" id="buscador" placeholder="Buscar por título, año, director o género..." 
+           style="width: 70%; padding: 10px; font-size: 16px; border: 2px solid #ddd; border-radius: 5px;">
+    <button onclick="buscarPeliculas()" style="padding: 10px 20px; font-size: 16px;">🔍 Buscar</button>
+    <button onclick="limpiarBusqueda()" style="padding: 10px 20px; font-size: 16px; background: #6c757d;">Limpiar</button>
+  </div>
+  
+  <div id="resultadoBusqueda" style="margin: 10px 0; color: #666; font-style: italic;"></div>
+  <div id="listaPeliculas"></div>
+
+  <div id="modal" class="modal">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <h2 id="modalTitulo"></h2>
+      <div class="detalle-label">Año:</div>
+      <div id="modalAnio"></div>
+      <div class="detalle-label">Género:</div>
+      <div id="modalGenero"></div>
+      <div class="detalle-label">Director:</div>
+      <div id="modalDirector"></div>
+      <div class="detalle-label">Elenco:</div>
+      <div id="modalElenco"></div>
+      <div class="detalle-label">Sinopsis:</div>
+      <div id="modalSinopsis"></div>
+
+      <hr style="margin: 20px 0;">
+      
+      <h3>Añadir Reseña</h3>
+      <form id="formResena">
+        <div style="margin: 10px 0;">
+          <label>Calificación:</label>
+          <select id="calificacion" required style="padding: 5px; margin-left: 10px;">
+            <option value="">Selecciona...</option>
+            <option value="1">⭐ 1 - Muy mala</option>
+            <option value="2">⭐⭐ 2 - Mala</option>
+            <option value="3">⭐⭐⭐ 3 - Regular</option>
+            <option value="4">⭐⭐⭐⭐ 4 - Buena</option>
+            <option value="5">⭐⭐⭐⭐⭐ 5 - Excelente</option>
+          </select>
+        </div>
+        <div style="margin: 10px 0;">
+          <label>Tu reseña:</label><br>
+          <textarea id="textoResena" rows="4" style="width: 100%; padding: 8px; margin-top: 5px;" required></textarea>
+        </div>
+        <button type="submit" style="margin-top: 10px;">Enviar Reseña</button>
+      </form>
+
+      <hr style="margin: 20px 0;">
+
+      <h3>Reseñas de usuarios (<span id="contadorResenas">0</span>)</h3>
+      <div id="listaResenas"></div>
+    </div>
+  </div>
+
+  <div id="modalAgregar" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="cerrarFormularioAgregar()">&times;</span>
+      <h2>Agregar Nueva Película</h2>
+      <form id="formAgregarPelicula">
+        <div style="margin: 15px 0;">
+          <label style="font-weight: bold;">Título:</label><br>
+          <input type="text" id="nuevoTitulo" required style="width: 100%; padding: 8px; margin-top: 5px;">
+        </div>
+        <div style="margin: 15px 0;">
+          <label style="font-weight: bold;">Año:</label><br>
+          <input type="number" id="nuevoAnio" required min="1800" max="2100" style="width: 100%; padding: 8px; margin-top: 5px;">
+        </div>
+        <div style="margin: 15px 0;">
+          <label style="font-weight: bold;">Género:</label><br>
+          <input type="text" id="nuevoGenero" required placeholder="Ej: Drama, Acción" style="width: 100%; padding: 8px; margin-top: 5px;">
+        </div>
+        <div style="margin: 15px 0;">
+          <label style="font-weight: bold;">Director:</label><br>
+          <input type="text" id="nuevoDirector" required style="width: 100%; padding: 8px; margin-top: 5px;">
+        </div>
+        <div style="margin: 15px 0;">
+          <label style="font-weight: bold;">Elenco:</label><br>
+          <input type="text" id="nuevoElenco" required placeholder="Separados por comas" style="width: 100%; padding: 8px; margin-top: 5px;">
+        </div>
+        <div style="margin: 15px 0;">
+          <label style="font-weight: bold;">Sinopsis:</label><br>
+          <textarea id="nuevaSinopsis" required rows="4" style="width: 100%; padding: 8px; margin-top: 5px;"></textarea>
+        </div>
+        <button type="submit" style="padding: 12px 30px; font-size: 16px;">Agregar Película</button>
+        <button type="button" onclick="cerrarFormularioAgregar()" style="padding: 12px 30px; font-size: 16px; background: #6c757d; margin-left: 10px;">Cancelar</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const usuario = localStorage.getItem("usuario");
+    if (!usuario) window.location.href = "/";
+    document.getElementById("usuario").textContent = usuario;
+
+    document.getElementById("logout").onclick = () => {
+      localStorage.removeItem("usuario");
+      window.location.href = "/";
+    };
+
+    const modal = document.getElementById("modal");
+    const closeBtn = document.querySelector(".close");
+
+    closeBtn.onclick = () => {
+      modal.style.display = "none";
+    };
+
+    window.onclick = (e) => {
+      if (e.target === modal) {
+        modal.style.display = "none";
+      }
+    };
+
+    let peliculaActual = null;
+
+    function mostrarDetalle(pelicula) {
+      peliculaActual = pelicula;
+      document.getElementById("modalTitulo").textContent = pelicula.titulo;
+      document.getElementById("modalAnio").textContent = pelicula.anio;
+      document.getElementById("modalGenero").textContent = pelicula.genero || "No especificado";
+      document.getElementById("modalDirector").textContent = pelicula.director;
+      document.getElementById("modalElenco").textContent = pelicula.elenco;
+      document.getElementById("modalSinopsis").textContent = pelicula.sinopsis;
+      
+      document.getElementById("formResena").reset();
+      
+      cargarResenas(pelicula.id);
+      
+      modal.style.display = "block";
+    }
+
+    async function cargarResenas(peliculaId) {
+      try {
+        const res = await fetch(`/api/resenas/${peliculaId}`);
+        const resenas = await res.json();
+        const listaResenas = document.getElementById("listaResenas");
+        const contador = document.getElementById("contadorResenas");
+        
+        contador.textContent = resenas.length;
+        
+        if (resenas.length === 0) {
+          listaResenas.innerHTML = "<p style='color: #999; padding: 10px; background: #f5f5f5; border-radius: 5px;'>No hay reseñas aún. ¡Sé el primero en escribir una!</p>";
+          return;
+        }
+        
+        listaResenas.innerHTML = "";
+        resenas.forEach(r => {
+          const div = document.createElement("div");
+          div.className = "resena-item";
+          const estrellas = "⭐".repeat(r.calificacion);
+          div.innerHTML = `
+            <div>
+              <span class="resena-usuario">${r.usuario}</span>
+              <span class="resena-calificacion">${estrellas} (${r.calificacion}/5)</span>
+            </div>
+            <div class="resena-texto">${r.resena}</div>
+            <div class="resena-fecha">${new Date(r.fecha).toLocaleString('es-ES')}</div>
+          `;
+          listaResenas.appendChild(div);
+        });
+      } catch (error) {
+        console.error("Error al cargar reseñas:", error);
+        document.getElementById("listaResenas").innerHTML = "<p style='color: red;'>Error al cargar las reseñas</p>";
+      }
+    }
+
+    document.getElementById("formResena").onsubmit = async (e) => {
+      e.preventDefault();
+      
+      const calificacion = parseInt(document.getElementById("calificacion").value);
+      const resena = document.getElementById("textoResena").value;
+      
+      const res = await fetch("/api/resenas", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+          pelicula_id: peliculaActual.id,
+          usuario: usuario,
+          calificacion: calificacion,
+          resena: resena
+        })
+      });
+      
+      const data = await res.json();
+      
+      if (data.mensaje) {
+        alert(data.mensaje);
+        cargarResenas(peliculaActual.id);
+        document.getElementById("formResena").reset();
+      } else {
+        alert(data.error || "Error al enviar la reseña");
+      }
+    };
+
+    async function cargarPeliculas(busqueda = "") {
+      try {
+        const url = busqueda ? `/api/peliculas?busqueda=${encodeURIComponent(busqueda)}` : "/api/peliculas";
+        const res = await fetch(url);
+        const data = await res.json();
+        const lista = document.getElementById("listaPeliculas");
+        const resultado = document.getElementById("resultadoBusqueda");
+        
+        lista.innerHTML = "";
+        
+        if (data.length === 0) {
+          lista.innerHTML = "<p style='color: #999; padding: 20px; text-align: center;'>No se encontraron películas</p>";
+          resultado.textContent = busqueda ? `No se encontraron resultados para "${busqueda}"` : "";
+          return;
+        }
+        
+        if (busqueda) {
+          resultado.textContent = `Se encontraron ${data.length} película(s) para "${busqueda}"`;
+        } else {
+          resultado.textContent = `Mostrando ${data.length} película(s)`;
+        }
+        
+        data.forEach(p => {
+          const div = document.createElement("div");
+          div.className = "pelicula-item";
+          div.innerHTML = `
+            <span class="pelicula-titulo">${p.titulo}</span> (${p.anio})
+            <span style="color: #666; margin-left: 10px; font-size: 0.9em;">${p.genero}</span>
+          `;
+          div.onclick = () => mostrarDetalle(p);
+          lista.appendChild(div);
+        });
+      } catch (error) {
+        console.error("Error al cargar películas:", error);
+        document.getElementById("listaPeliculas").innerHTML = "<p style='color: red;'>Error al cargar las películas</p>";
+      }
+    }
+
+    function buscarPeliculas() {
+      const busqueda = document.getElementById("buscador").value.trim();
+      cargarPeliculas(busqueda);
+    }
+
+    function limpiarBusqueda() {
+      document.getElementById("buscador").value = "";
+      cargarPeliculas();
+    }
+
+    document.getElementById("buscador").addEventListener("keypress", (e) => {
+      if (e.key === "Enter") {
+        buscarPeliculas();
+      }
+    });
+
+    const modalAgregar = document.getElementById("modalAgregar");
+
+    function mostrarFormularioAgregar() {
+      modalAgregar.style.display = "block";
+      document.getElementById("formAgregarPelicula").reset();
+    }
+
+    function cerrarFormularioAgregar() {
+      modalAgregar.style.display = "none";
+    }
+
+    document.getElementById("formAgregarPelicula").onsubmit = async (e) => {
+      e.preventDefault();
+
+      const nuevaPelicula = {
+        titulo: document.getElementById("nuevoTitulo").value.trim(),
+        anio: document.getElementById("nuevoAnio").value,
+        genero: document.getElementById("nuevoGenero").value.trim(),
+        director: document.getElementById("nuevoDirector").value.trim(),
+        elenco: document.getElementById("nuevoElenco").value.trim(),
+        sinopsis: document.getElementById("nuevaSinopsis").value.trim()
+      };
+
+      try {
+        const res = await fetch("/api/peliculas", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify(nuevaPelicula)
+        });
+
+        const data = await res.json();
+
+        if (data.mensaje) {
+          alert(data.mensaje + "\n\nLa película '" + nuevaPelicula.titulo + "' ha sido agregada exitosamente.");
+          cerrarFormularioAgregar();
+          cargarPeliculas(); 
+        } else {
+          alert(data.error || "Error al agregar la película");
+        }
+      } catch (error) {
+        console.error("Error:", error);
+        alert("Error al conectar con el servidor");
+      }
+    };
+
+    cargarPeliculas();
+  </script>
+</body>
+</html>

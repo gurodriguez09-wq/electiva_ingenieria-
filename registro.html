@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Registro - Cine</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            max-width: 400px;
+            width: 100%;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+            text-align: center;
+            font-size: 28px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: bold;
+        }
+        input[type="text"],
+        input[type="password"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        input[type="text"]:focus,
+        input[type="password"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background: #218838;
+        }
+        .link-container {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .link-container a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .link-container a:hover {
+            text-decoration: underline;
+        }
+        .error-message {
+            background: #fee;
+            color: #c33;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            display: none;
+        }
+        .success-message {
+            background: #efe;
+            color: #3c3;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            display: none;
+        }
+        .password-hint {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📝 Registro</h1>
+        <div id="errorMessage" class="error-message"></div>
+        <div id="successMessage" class="success-message"></div>
+        <form id="registroForm">
+            <div class="form-group">
+                <label for="nombre">Usuario</label>
+                <input type="text" id="nombre" required minlength="3">
+                <div class="password-hint">Mínimo 3 caracteres</div>
+            </div>
+            <div class="form-group">
+                <label for="clave">Contraseña</label>
+                <input type="password" id="clave" required minlength="4">
+                <div class="password-hint">Mínimo 4 caracteres</div>
+            </div>
+            <button type="submit">Crear Cuenta</button>
+        </form>
+        <div class="link-container">
+            <p>¿Ya tienes cuenta? <a href="/">Inicia sesión aquí</a></p>
+        </div>
+    </div>
+
+    <script>
+    document.getElementById("registroForm").onsubmit = async (e) => {
+        e.preventDefault();
+        const nombre = document.getElementById("nombre").value;
+        const clave = document.getElementById("clave").value;
+        const errorDiv = document.getElementById("errorMessage");
+        const successDiv = document.getElementById("successMessage");
+        
+        errorDiv.style.display = "none";
+        successDiv.style.display = "none";
+
+        try {
+            const res = await fetch("/api/registro", {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({nombre, clave})
+            });
+
+            const data = await res.json();
+
+            if (data.mensaje) {
+                successDiv.textContent = "¡Registro exitoso! Redirigiendo al login...";
+                successDiv.style.display = "block";
+                setTimeout(() => {
+                    window.location.href = "/";
+                }, 1500);
+            } else {
+                errorDiv.textContent = data.error || "Error al registrar usuario";
+                errorDiv.style.display = "block";
+            }
+        } catch (error) {
+            errorDiv.textContent = "Error al conectar con el servidor";
+            errorDiv.style.display = "block";
+        }
+    };
+    </script>
+</body>
+</html>
