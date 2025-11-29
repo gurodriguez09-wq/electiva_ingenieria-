@@ -12,4 +12,3 @@ Ejecuta el servidor: con el comando py server.py
 Abre el navegador y entra a:
 http://localhost:8000
 
-Para detener el servidor, usa Ctrl + C en la terminal.
